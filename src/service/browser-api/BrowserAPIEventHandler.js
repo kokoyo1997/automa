@@ -109,7 +109,10 @@ class BrowserAPIEventHandler {
           type: 'remove',
         },
         'background'
-      );
+      ).finally(() => {
+        // Allow re-registering after all listeners are removed
+        this.#isEventAdded.delete(name);
+      });
       delete this.#eventsHandler[name];
     };
 
@@ -165,6 +168,10 @@ class BrowserAPIEventHandler {
     if (isAddListener) this.#browserEvents[name] = listener;
 
     browserEventAPI[eventType](listener);
+
+    if (!isAddListener) {
+      delete this.#browserEvents[name];
+    }
   }
 }
 
