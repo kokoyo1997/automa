@@ -990,17 +990,37 @@ message.on('downloads:watch-created', async (data) => {
   // save pending download requests
   downloadListeners.pendingRequests = downloadListeners.pendingRequests || [];
 
+  // 创建一个 Promise，在下载完成时 resolve
+  let resolvePromise = null;
+  const downloadPromise = new Promise((resolve) => {
+    resolvePromise = resolve;
+  });
+
   // safe callback
   let safeCallback = null;
   if (typeof data.onComplete === 'function') {
     safeCallback = (response) => {
       try {
         data.onComplete(response);
+        // 同时 resolve Promise
+        if (resolvePromise) {
+          resolvePromise(response);
+        }
       } catch (callbackError) {
         console.error(
           '❌ failed to call download complete callback:',
           callbackError
         );
+        if (resolvePromise) {
+          resolvePromise({ error: true, message: callbackError.message });
+        }
+      }
+    };
+  } else {
+    // 如果没有 onComplete 回调，直接使用 Promise resolve
+    safeCallback = (response) => {
+      if (resolvePromise) {
+        resolvePromise(response);
       }
     };
   }
@@ -1011,7 +1031,31 @@ message.on('downloads:watch-created', async (data) => {
     callback: safeCallback,
   });
 
-  return true;
+  // 如果不需要等待下载完成，立即 resolve
+  if (!data.downloadData?.waitForDownload) {
+    const immediateResponse = {
+      filename: data.downloadData?.filename || '',
+      waitForDownload: false,
+    };
+    // 如果存在 onComplete 回调，也调用它
+    if (typeof data.onComplete === 'function') {
+      try {
+        data.onComplete(immediateResponse);
+      } catch (callbackError) {
+        console.error(
+          '❌ failed to call download complete callback:',
+          callbackError
+        );
+      }
+    }
+    // resolve Promise
+    if (resolvePromise) {
+      resolvePromise(immediateResponse);
+    }
+  }
+
+  // 返回 Promise，这样 sendMessage 可以等待下载完成
+  return downloadPromise;
 });
 
 message.on('downloads:watch-changed', async ({ downloadId, onComplete }) => {

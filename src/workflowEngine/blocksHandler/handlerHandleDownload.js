@@ -151,7 +151,9 @@ async function handleDownload({ data, id: blockId }) {
                   },
                 },
                 'background'
-              ).catch((err) => {
+              ).then((response) => {
+                completeResolve(response);
+              }).catch((err) => {
                 completeResolve({ error: true, message: err.message });
               });
             });

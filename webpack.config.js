@@ -188,12 +188,12 @@ const options = {
         },
         {
           from: 'src/assets/images/icon-128.png',
-          to: path.join(__dirname, 'build'),
+          to: path.join(__dirname, 'build', 'icon-128.png'),
           force: true,
         },
         {
           from: 'src/assets/images/icon-dev-128.png',
-          to: path.join(__dirname, 'build'),
+          to: path.join(__dirname, 'build', 'icon-dev-128.png'),
           force: true,
         },
       ],
