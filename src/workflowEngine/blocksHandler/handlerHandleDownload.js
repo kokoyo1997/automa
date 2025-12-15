@@ -151,11 +151,13 @@ async function handleDownload({ data, id: blockId }) {
                   },
                 },
                 'background'
-              ).then((response) => {
-                completeResolve(response);
-              }).catch((err) => {
-                completeResolve({ error: true, message: err.message });
-              });
+              )
+                .then((response) => {
+                  completeResolve(response);
+                })
+                .catch((err) => {
+                  completeResolve({ error: true, message: err.message });
+                });
             });
 
             if (!processedData.waitForDownload) {
