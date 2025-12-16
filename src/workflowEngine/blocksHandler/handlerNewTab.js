@@ -141,7 +141,16 @@ async function newTab({ id, data }) {
     });
   }
 
-  await BrowserAPIService.windows.update(tab.windowId, { focused: true });
+  const window = await BrowserAPIService.windows.get(tab.windowId);
+  const updateOptions = { focused: true };
+
+  // 如果窗口当前是最小化状态，保持最小化状态，避免被恢复/最大化
+  if (window.state === 'minimized') {
+    updateOptions.state = 'minimized';
+    delete updateOptions.focused;
+  }
+
+  await BrowserAPIService.windows.update(tab.windowId, updateOptions);
 
   return {
     data: data.url,
